@@ -46,7 +46,7 @@ from message_ix_models.util import (
 from .config import Config
 
 if TYPE_CHECKING:
-    from genno.types import AnyQuantity
+    from genno.types import AnyQuantity, KeyLike
     from message_ix import Scenario
     from xarray.core.types import Dims
 
@@ -715,6 +715,37 @@ def maybe_select(qty: "AnyQuantity", *, indexers: dict) -> "AnyQuantity":
         return qty
     else:
         return select(qty, indexers=idx)
+
+
+@genno.Operator.define()
+def message_df_to_qty(df: pd.DataFrame, name: str) -> "AnyQuantity":
+    """Convert a MESSAGE-structured data frame to a Quantity."""
+    from message_ix.models import MESSAGE_MACRO
+
+    from message_ix_models.util.ixmp import rename_dims
+
+    info = MESSAGE_MACRO.items[name]
+
+    tmp = df.set_index(list(info.dims))
+    units = df["unit"].unique()
+    assert 1 == len(units)
+
+    return genno.Quantity(tmp["value"], units=units[0]).rename(rename_dims())
+
+
+@message_df_to_qty.helper
+def _(func, c: "genno.Computer", key, base, name: str, **kwargs) -> "KeyLike":
+    """:meth:`.Computer.add` helper for :func:`.message_df_to_qty`."""
+    from message_ix.models import MESSAGE_MACRO
+
+    from message_ix_models.util.ixmp import rename_dims
+
+    info = MESSAGE_MACRO.items[name]
+    rd = rename_dims()
+    key = genno.Key(key).drop_all() * tuple(rd.get(d, d) for d in info.dims)
+
+    c.add(key, func, base, name=name, **kwargs)
+    return key
 
 
 def min(
