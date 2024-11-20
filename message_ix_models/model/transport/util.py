@@ -1,8 +1,9 @@
 """Utility code for MESSAGEix-Transport."""
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Union
+from typing import TYPE_CHECKING, Union
 
 from message_ix_models import Context
 from message_ix_models.util import package_data_path
