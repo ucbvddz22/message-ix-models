@@ -97,7 +97,7 @@ def get_weo_data() -> pd.DataFrame:
     for tech_key, cost_key in product(DICT_TECH_ROWS, DICT_COST_COLS):
         df = (
             pd.read_excel(
-                file_path,
+                file_path,engine='openpyxl',
                 sheet_name=DICT_TECH_ROWS[tech_key][0],
                 header=None,
                 skiprows=DICT_TECH_ROWS[tech_key][1],
